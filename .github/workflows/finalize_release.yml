@@ -1,0 +1,14 @@
+name: Finalize Release
+run-name: "Finalize Release: ${{ github.ref }}"
+
+on:
+  workflow_dispatch:
+
+jobs:
+  finalize:
+    permissions:
+      contents: write
+      actions: write
+      pull-requests: write
+    uses: preetham-ganesh/release-branching-temp/.github/workflows/finalize_release.yaml
+    secrets: inherit
