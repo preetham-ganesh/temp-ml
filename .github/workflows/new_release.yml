@@ -19,7 +19,7 @@ jobs:
     permissions:
       contents: write
       actions: write
-    uses: preetham-ganesh/release-branching/.github/workflows/new_release.yaml@latest
+    uses: preetham-ganesh/release-branching/.github/workflows/new_release.yaml@main
     with:
       bump: ${{ inputs.bump }}
     secrets: inherit 
