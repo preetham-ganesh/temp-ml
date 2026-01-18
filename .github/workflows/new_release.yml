@@ -1,0 +1,25 @@
+name: New Release
+run-name: "New Release: ${{ inputs.bump }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        type: choice
+        description: Release version to create
+        required: true
+        default: patch
+        options:
+        - patch
+        - minor
+        - major
+
+jobs:
+  create:
+    permissions:
+      contents: write
+      actions: write
+    uses: preetham-ganesh/release-branching/.github/workflows/new_release.yaml@latest
+    with:
+      bump: ${{ inputs.bump }}
+    secrets: inherit 
