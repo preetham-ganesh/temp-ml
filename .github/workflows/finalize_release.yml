@@ -10,5 +10,5 @@ jobs:
       contents: write
       actions: write
       pull-requests: write
-    uses: preetham-ganesh/release-branching-temp/.github/workflows/finalize_release.yaml
+    uses: preetham-ganesh/release-branching-temp/.github/workflows/finalize_release.yaml@v1.0.0
     secrets: inherit
