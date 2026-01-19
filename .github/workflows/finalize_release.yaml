@@ -72,13 +72,14 @@ jobs:
 
       - name: Open PR to main
         run: |
+          gh auth login --with-token <<< "$GH_PAT"
           gh pr create \
             --base main \
             --head $FINAL_RELEASE_BRANCH_NAME \
             --title "Promote $RELEASE_BRANCH_NAME" \
             --body "Created by GitHub Actions"
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_PAT: ${{ secrets.GH_PAT }}
 
       - name: Remove release branch
         run: |
