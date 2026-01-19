@@ -6,20 +6,74 @@ on:
     inputs:
       bump:
         type: choice
-        description: Release version to create
         required: true
         default: patch
-        options:
-        - patch
-        - minor
-        - major
+        options: [patch, minor, major]
+      create_tag:
+        type: boolean
+        default: true
+      as_rc:
+        type: boolean
+        default: true
 
 jobs:
-  create:
+  release_branch:
+    name: New Release
+    runs-on: ubuntu-latest
+
     permissions:
       contents: write
-      actions: write
-    uses: preetham-ganesh/release-branching-temp/.github/workflows/new_release.yaml@v1.0.0
-    with:
-      bump: ${{ inputs.bump }}
-    secrets: inherit 
+
+    steps:
+      - name: Fail If Not On main
+        if: github.ref != 'refs/heads/main'
+        run: |
+          echo "Must be run on main"
+          exit 1
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install Poetry
+        run: |
+          pipx install poetry
+
+      - name: Compute release version
+        run: |
+          BASE_VERSION=$(poetry version -s --dry-run ${{ inputs.bump }})
+          echo "RELEASE_BRANCH_NAME=release/v$BASE_VERSION" >> $GITHUB_ENV
+          if ${{ inputs.as_rc }}; then
+            echo "RELEASE_VERSION=${BASE_VERSION}rc0" >> $GITHUB_ENV
+            echo "RELEASE_TAG_VERSION=v${BASE_VERSION}rc0" >> $GITHUB_ENV
+          else
+            echo "RELEASE_VERSION=$BASE_VERSION" >> $GITHUB_ENV
+            echo "RELEASE_TAG_VERSION=v$BASE_VERSION" >> $GITHUB_ENV
+          fi
+
+      - name: Fail If Branch Exists
+        run: |
+          git fetch origin
+          git show-ref --verify --quiet refs/remotes/origin/$RELEASE_BRANCH_NAME && exit 1 || true
+
+      - name: Create release branch
+        run: |
+          git checkout -b $RELEASE_BRANCH_NAME
+          poetry version $RELEASE_VERSION
+          git commit -am "ci(pyproject.toml): bump ${{ inputs.bump }}"
+          git push -u origin $RELEASE_BRANCH_NAME
+
+      - name: Create tag
+        if: inputs.create_tag
+        run: |
+          git tag -a $RELEASE_TAG_VERSION -m "Release $RELEASE_TAG_VERSION"
+          git push origin $RELEASE_TAG_VERSION
